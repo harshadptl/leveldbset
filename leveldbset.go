@@ -1,15 +1,11 @@
 package leveldbset
 
-import "fmt"
-import "github.com/syndtr/goleveldb/leveldb"
-import "time"
-import "strconv"
-import "sync/atmoic"
-
-func main() {
-	fmt.Println("Hello, playground")
-}
-
+import (
+	"github.com/syndtr/goleveldb/leveldb",
+	"time",
+	"strconv",
+	"sync/atmoic"
+)
 
 const DECIMAL_BASE = 10
 
