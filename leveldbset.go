@@ -12,15 +12,25 @@ import (
 const DECIMAL_BASE = 10
 
 type LeveldbSet struct {
-	name     string
-	db       *leveldb.DB
-	capacity int64
+	name string
+	db   *leveldb.DB
+	size int64
 }
 
-func New(name string, db *leveldb.DB) *LeveldbSet {
-	return &LeveldbSet{name: name, db: db}
+//New returns a LeveldbSet object while creating/opening a leveldb file based on the name
+//returns an error if there is any error opening the file
+func New(name string, db *leveldb.DB) (*LeveldbSet, error) {
+
+	db, err := leveldb.OpenFile("leveldbset/"+name, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return &LeveldbSet{name: name, db: db}, nil
 }
 
+//Add adds the supplied element to the Set
+// returns the error if any encountered in put-ting to leveldb
 func (s *LeveldbSet) Add(element string) error {
 
 	key := s.encodeKey(element)
@@ -30,7 +40,7 @@ func (s *LeveldbSet) Add(element string) error {
 
 	err := s.db.Put([]byte(key), []byte(nowS), nil)
 	if err == nil {
-		atomic.AddInt64(&(s.capacity), 1)
+		atomic.AddInt64(&(s.size), 1)
 	}
 
 	return err
@@ -44,8 +54,9 @@ func (s *LeveldbSet) decodeKey(key string) string {
 	return strings.TrimPrefix(key, s.name+"#")
 }
 
-func (s *LeveldbSet) Capacity() int64 {
-	return s.capacity
+//Size returns the size of the set
+func (s *LeveldbSet) Size() int64 {
+	return s.size
 }
 
 func (s *LeveldbSet) Remove(element string) error {
@@ -62,7 +73,7 @@ func (s *LeveldbSet) Remove(element string) error {
 
 	err = s.db.Delete([]byte(key), nil)
 	if err == nil {
-		atomic.AddInt64(&(s.capacity), -1)
+		atomic.AddInt64(&(s.size), -1)
 	}
 
 	return err
@@ -82,7 +93,7 @@ func (s *LeveldbSet) Pop() string {
 
 func (s *LeveldbSet) IsEmpty() bool {
 
-	if s.capacity == 0 {
+	if s.size == 0 {
 		return true
 	}
 
