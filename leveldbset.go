@@ -19,7 +19,7 @@ type LeveldbSet struct {
 
 //New returns a LeveldbSet object while creating/opening a leveldb file based on the name
 //returns an error if there is any error opening the file
-func New(name string, db *leveldb.DB) (*LeveldbSet, error) {
+func New(name string) (*LeveldbSet, error) {
 
 	db, err := leveldb.OpenFile("leveldbset/"+name, nil)
 	if err != nil {
