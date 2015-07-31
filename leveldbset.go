@@ -17,6 +17,8 @@ type LeveldbSet struct {
 	size int64
 }
 
+var ErrSetEmpty = errors.New("Set Empty")
+
 //New returns a LeveldbSet object while creating/opening a leveldb file based on the name
 //returns an error if there is any error opening the file
 func New(name string) (*LeveldbSet, error) {
@@ -79,16 +81,19 @@ func (s *LeveldbSet) Remove(element string) error {
 	return err
 }
 
-func (s *LeveldbSet) Pop() string {
+func (s *LeveldbSet) Pop() (string, error) {
 	iter := s.db.NewIterator(nil, nil)
 
-	iter.Next()
+	if iter.Next() == false {
+		return "", ErrSetEmpty
+	}
+
 	key := iter.Key()
 	s.db.Delete([]byte(key), nil)
 
 	elem := s.decodeKey(string(key))
 
-	return elem
+	return elem, nil
 }
 
 func (s *LeveldbSet) IsEmpty() bool {
