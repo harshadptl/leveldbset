@@ -97,8 +97,11 @@ func (s *LeveldbSet) Pop() (string, error) {
 	}
 
 	key := iter.Key()
-	s.db.Delete([]byte(key), nil)
+	err := s.db.Delete([]byte(key), nil)
 	s.Unlock()
+	if err == nil {
+		atomic.AddInt64(&(s.size), -1)
+	}
 
 	elem := s.decodeKey(string(key))
 
