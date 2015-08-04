@@ -25,7 +25,7 @@ var ErrSetEmpty = errors.New("Set Empty")
 //returns an error if there is any error opening the file
 func New(name string) (*LeveldbSet, error) {
 
-	db, err := leveldb.OpenFile("leveldbset/"+name, nil)
+	db, err := leveldb.OpenFile("leveldbset/var/db/"+name, nil)
 	if err != nil {
 		return nil, err
 	}
