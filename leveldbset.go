@@ -5,6 +5,7 @@ import (
 	"github.com/syndtr/goleveldb/leveldb"
 	"strconv"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -15,6 +16,7 @@ type LeveldbSet struct {
 	name string
 	db   *leveldb.DB
 	size int64
+	sync.Mutex
 }
 
 var ErrSetEmpty = errors.New("Set Empty")
@@ -40,7 +42,9 @@ func (s *LeveldbSet) Add(element string) error {
 	now := time.Now().Unix()
 	nowS := strconv.FormatInt(now, DECIMAL_BASE)
 
+	s.Lock()
 	err := s.db.Put([]byte(key), []byte(nowS), nil)
+	s.Unlock()
 	if err == nil {
 		atomic.AddInt64(&(s.size), 1)
 	}
@@ -64,7 +68,9 @@ func (s *LeveldbSet) Size() int64 {
 func (s *LeveldbSet) Remove(element string) error {
 	key := s.encodeKey(element)
 
+	s.Lock()
 	_, err := s.db.Get([]byte(key), nil)
+	s.Unlock()
 	if err == leveldb.ErrNotFound {
 
 		return errors.New("key not found")
@@ -72,8 +78,9 @@ func (s *LeveldbSet) Remove(element string) error {
 
 		return err
 	}
-
+	s.Lock()
 	err = s.db.Delete([]byte(key), nil)
+	s.Unlock()
 	if err == nil {
 		atomic.AddInt64(&(s.size), -1)
 	}
@@ -82,6 +89,7 @@ func (s *LeveldbSet) Remove(element string) error {
 }
 
 func (s *LeveldbSet) Pop() (string, error) {
+	s.Lock()
 	iter := s.db.NewIterator(nil, nil)
 
 	if iter.Next() == false {
@@ -90,6 +98,7 @@ func (s *LeveldbSet) Pop() (string, error) {
 
 	key := iter.Key()
 	s.db.Delete([]byte(key), nil)
+	s.Unlock()
 
 	elem := s.decodeKey(string(key))
 
