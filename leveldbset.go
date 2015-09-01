@@ -3,9 +3,6 @@ package leveldbset
 import (
 	"errors"
 	"github.com/syndtr/goleveldb/leveldb"
-	"log"
-	"os"
-	"os/signal"
 	"strconv"
 	"strings"
 	"sync"
@@ -32,16 +29,6 @@ func New(name string) (*LeveldbSet, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, os.Kill)
-
-	go func() {
-		s := <-c
-		log.Println("closing leveldb connection, ", s)
-		db.Close()
-	}()
-
 	return &LeveldbSet{name: name, db: db}, nil
 }
 
